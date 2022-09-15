@@ -1,0 +1,9 @@
+from sender import Shoot
+
+a = Shoot('qu3', '172.17.0.2', 5672)
+for i in range(20000):
+    a.send(str(i))
+    
+
+a.terminate()
+
