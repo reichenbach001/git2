@@ -22,3 +22,6 @@ class Processor:
 
         if list[0] == 'response':
             return list[0]
+
+    def commit(self):
+        self.db.commit()        

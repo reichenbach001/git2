@@ -16,4 +16,4 @@ class Shoot:
 
     def terminate(self):
         self.connection.close()
-
+    
