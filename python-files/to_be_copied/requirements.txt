@@ -1,3 +1,7 @@
+<<<<<<< HEAD
 git+https://m.samani:m.samani1234@git.lfdesk.ir/dataeng/internship/tsetmc.git@develop
+=======
+git+https://github.com/reichenbach001/tsetmc.git@develop
+>>>>>>> develop
 mysql-connector-python
 pika
