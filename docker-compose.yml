@@ -1,0 +1,41 @@
+version: '3.5'
+services:
+  mysqll:
+    image: mysql
+    restart: always
+    container_name: 'mysqll'
+    environment:
+      MYSQL_DATABASE: 'tset_db'
+      MYSQL_USER: 'mahdi'
+      MYSQL_PASSWORD: '1234'
+      MYSQL_ROOT_PASSWORD: 'toor'
+    volumes:
+    - ./mysqll/vol4:/var/lib/mysql
+    - ./mysqll/db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+    ports:
+      - '3306:3306'
+
+  phpmyadmin:
+    depends_on:
+       - mysqll
+    container_name: 'phpmyadmin'
+    image: phpmyadmin:5.2.0-apache
+    restart: always
+    ports:
+      - '8181:80'
+    environment:
+      PMA_HOST: mysqll
+      MYSQL_ROOT_PASSWORD: 'toor'
+
+
+
+  the_crawler:
+    build: ./python-files/
+    container_name: 'the_crawler'
+    depends_on:
+      - phpmyadmin
+    volumes:
+    - ./python-files/to_be_copied:/app
+
+volumes:
+  db_data: {}
