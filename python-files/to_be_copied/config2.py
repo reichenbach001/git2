@@ -3,5 +3,11 @@ constant_vars = {'tset_share_URLs_file': 'URLs.txt',
                  'selecting_length': 30,
                  'crawled_data_dir': './data2/',
                  'crawling_url_1': 'http://www.tsetmc.com/tsev2/data/InstTradeHistory.aspx?i=',
-                 'crawling_url_2': '&Top=999999&A=1'
+                 'crawling_url_2': '&Top=999999&A=1',
+                  'host':'mysqll',
+                  'user':'mahdi',
+                  'password':'1234',
+                  'port':5672,
+                  'host':'172.17.0.2'
+
                  }
