@@ -1,7 +1,9 @@
 import time
 import os
+
 from hook import Hook
 from sender import Shoot
+
 from datetime import datetime
 import tset_module
 from tset_module.config2 import constant_vars
@@ -42,7 +44,7 @@ def fetch_data(urls):
 
         shoot.send(last_update_query)
         var=hook.start_shit()
-
+        
         last_update2 = curs.fetchall()[0]
         for last_update in last_update2:
             pass

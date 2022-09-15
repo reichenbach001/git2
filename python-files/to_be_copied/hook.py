@@ -8,7 +8,7 @@ class Hook:
         self.qu = qu
         self.host = host
         self.port = port
-        self._body = object
+        self.body = object
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
 
     def start_shit(self):
@@ -18,8 +18,8 @@ class Hook:
         channel.queue_declare(queue=self.qu)
 
         def callback(ch, method, properties, body):
-            self._body= process.extract(body)
-        
+            self.body= process.extract(body)
+            
         channel.basic_consume(queue=self.qu, on_message_callback=callback, auto_ack=True)
 
         print(' [*] Waiting for messages. To exit press CTRL+C')
