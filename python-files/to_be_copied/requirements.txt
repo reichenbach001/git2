@@ -1,0 +1,3 @@
+git+https://m.samani:m.samani1234@git.lfdesk.ir/dataeng/internship/tsetmc.git@develop
+mysql-connector-python
+pika
