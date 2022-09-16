@@ -4,7 +4,6 @@ import os
 from hook import Hook
 from sender import Shoot
 
-
 from datetime import datetime
 import tset_module
 from tset_module.config2 import constant_vars
@@ -16,18 +15,15 @@ def fetch_shares():
     length_to_select = constant_vars['selecting_length']
     url_fetcher_obj = tset_module.TsetCrawler()
     url_fetcher = url_fetcher_obj.fetch_urls(url, length_to_select)
+
     return url_fetcher
 
 
 def fetch_data(urls):
     complete_url = []
 
-
     shoot = Shoot('qu1')
     hook = Hook('qu2')
-
-    path = constant_vars["crawled_data_dir"]
-    os.makedirs(path, exist_ok=True)
 
     data_fetcher_obj = tset_module.TsetCrawler()
     tmp = 0
@@ -38,25 +34,17 @@ def fetch_data(urls):
 
     for i in urls:
         hook = Hook('qu2')
+        
         make_table_i(i)
 
-        tmp = tmp + 1
-        if tmp > 50:
-            return 0
         data_fetched = data_fetcher_obj.fetch_data(i)
         trimmer_no = data_fetched.split(';')
-
         last_update_query = f'request$$$SELECT last_update FROM last_check WHERE share_id={i};'
-
         shoot.send(last_update_query)
 
-
         hook.start_shit()
-
         last_update = hook.body
- 
         hook.terminate()
-
 
         for jj in trimmer_no:
             row = jj.split('@')
@@ -64,7 +52,6 @@ def fetch_data(urls):
                 (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
             if timestamp < last_update:
                 last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
-
                 shoot.send(last_check_update_query)
                 shoot.send('commit$$$')
 
@@ -94,7 +81,6 @@ def make_table_i(i):
 
     shoot2.send(table_making_query)
     shoot2.terminate()
-
 
 
 def runner():
