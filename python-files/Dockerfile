@@ -8,5 +8,5 @@ RUN pip install -r requirements.txt
 COPY ./to_be_copied/ .
 
 
-CMD ["sleep" ,"infinity"]
+CMD ["python" ,"crawler2.py"]
 

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 import pika
 from process import Processor
@@ -6,7 +5,7 @@ from config2 import constant_vars
 
 class Hook:
 
-    def __init__(self, qu, host_ip=constant_vars['host'], port_number=constant_vars['port']):
+    def __init__(self, qu, host_ip=constant_vars['host_rabbit'], port_number=constant_vars['port']):
         self.qu = qu
         self.host = host_ip
         self.port = port_number
@@ -26,7 +25,7 @@ class Hook:
             
             self.body = process.extract(body)
 
-            if self.qu=='qu2':
+            if self.qu==constant_vars['qeue_to_crawler']:
                 self.channel.stop_consuming()
 
 
@@ -41,7 +40,3 @@ class Hook:
 
         
         self.connection.close()
-
-if __name__=='__main__':
-    hook=Hook('qu1')
-    hook.start_shit()

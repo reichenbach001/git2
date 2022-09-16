@@ -3,7 +3,7 @@ from config2 import constant_vars
 
 
 class Shoot:
-    def __init__(self, qu, host_ip=constant_vars['host'], port_number=constant_vars['port']):
+    def __init__(self, qu, host_ip=constant_vars['host_rabbit'], port_number=constant_vars['port']):
         self.qu = qu
         self.host = host_ip
         self.port = port_number

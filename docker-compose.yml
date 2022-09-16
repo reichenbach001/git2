@@ -10,7 +10,7 @@ services:
       MYSQL_PASSWORD: '1234'
       MYSQL_ROOT_PASSWORD: 'toor'
     volumes:
-    - ./mysqll/vol4:/var/lib/mysql
+    - /home/mahdi/Desktop/files/trash:/var/lib/mysql
     - ./mysqll/db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
     ports:
       - '3306:3306'
@@ -27,13 +27,19 @@ services:
       PMA_HOST: mysqll
       MYSQL_ROOT_PASSWORD: 'toor'
 
-
+  rabbit_mq:
+    image: rabbitmq:3.11.0-rc.1-management
+    restart: always
+    ports:
+      - '5672:5672'
+      - '8080:15672'
 
   the_crawler:
     build: ./python-files/
     container_name: 'the_crawler'
     depends_on:
-      - phpmyadmin
+      - mysqll
+      - rabbit_mq
     volumes:
     - ./python-files/to_be_copied:/app
 
