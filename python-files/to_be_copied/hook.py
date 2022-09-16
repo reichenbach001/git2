@@ -1,27 +1,47 @@
+
+#!/usr/bin/env python
 import pika
 from process import Processor
 from config2 import constant_vars
 
 class Hook:
-    
-    def __init__(self, qu, host=constant_vars['host'], port=constant_vars['port']):
+
+    def __init__(self, qu, host_ip=constant_vars['host'], port_number=constant_vars['port']):
         self.qu = qu
-        self.host = host
-        self.port = port
-        self._body = object
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
+        self.host = host_ip
+        self.port = port_number
+        self.body = object
+        self.connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host=self.host, port=self.port))
+        self.channel = self.connection.channel()
+        
 
     def start_shit(self):
-        process=Processor()
-        
-        channel=self.connection.channel()
-        channel.queue_declare(queue=self.qu)
+        process = Processor()
+        self.channel.queue_declare(queue=self.qu)
+
 
         def callback(ch, method, properties, body):
-            self._body= process.extract(body)
-        
-        channel.basic_consume(queue=self.qu, on_message_callback=callback, auto_ack=True)
+            body=body.decode('utf-8')
+            
+            self.body = process.extract(body)
 
-        print(' [*] Waiting for messages. To exit press CTRL+C')
-        channel.start_consuming()
+            if self.qu=='qu2':
+                self.channel.stop_consuming()
+
+
+        self.channel.basic_consume(
+            queue=self.qu, on_message_callback=callback, auto_ack=True)
+
+
+        print(' [*] Waiting for messages. To exit press CTRL+C : ',self.qu)
+        self.channel.start_consuming()
+
+    def terminate(self):
+
         
+        self.connection.close()
+
+if __name__=='__main__':
+    hook=Hook('qu1')
+    hook.start_shit()
