@@ -41,7 +41,7 @@ def fetch_data(urls):
     urls=urls[start_from:start_from+25]   
     # limiting done 
     #  
-
+    
     for i in urls:  
         get_and_save(i,today_date,data_fetcher_obj,shoot) 
 
