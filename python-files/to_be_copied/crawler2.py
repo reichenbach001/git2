@@ -1,8 +1,9 @@
+from asyncio import futures
 from logging import exception
 import time
 import os
 import random
-
+import concurrent.futures
 from hook import Hook
 from sender import Shoot
 
@@ -10,7 +11,7 @@ from datetime import datetime
 import tset_module
 from config2 import constant_vars
 
-from threading import Thread
+import threading
 
 def fetch_shares():
 
@@ -25,7 +26,7 @@ def fetch_shares():
 def fetch_data(urls):
     complete_url = []
 
-    th=Thread(target=hook_for_database_init)
+    th=threading.Thread(target=hook_for_database_init)
     th.start()
 
     shoot = Shoot(constant_vars['qeue_to_db'])
@@ -38,12 +39,12 @@ def fetch_data(urls):
     table_last_check_init(urls)
     # to limit crawling to 25
     start_from=random.randint(1,len(urls)-25)
-    urls=urls[start_from:start_from+25]   
+    urls=urls[start_from:start_from+250]   
     # limiting done 
     #  
     
-    for i in urls:  
-        get_and_save(i,today_date,data_fetcher_obj,shoot) 
+    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
+        futures={executor.submit(get_and_save,i,today_date,data_fetcher_obj,shoot): i for i in urls}
 
 
 
@@ -79,38 +80,42 @@ def get_and_save(i,today_date,data_fetcher_obj,shoot) :
 
     hook=Hook(constant_vars['qeue_to_crawler'])
     
-    try:
-        make_table_i(i)
+    #try:
+    make_table_i(i)
+    
+    data_fetched = data_fetcher_obj.fetch_data(i)
+    trimmer_no = data_fetched.split(';')
 
-        data_fetched = data_fetcher_obj.fetch_data(i)
-        trimmer_no = data_fetched.split(';')
+    last_update_query = f'request$$$SELECT last_update,share_id FROM last_check WHERE share_id={i};'
+    shoot.send(last_update_query)
 
-        last_update_query = f'request$$$SELECT last_update FROM last_check WHERE share_id={i};'
-        shoot.send(last_update_query)
+    hook.start()
+    last_update_tmp= hook.body
 
-        hook.start()
-        last_update = hook.body
-        hook.terminate_channel()
+    last_update=last_update_tmp.split(',')[0]
+    print(i,' : ',last_update_tmp.split(',')[1])
 
-        for iterator in trimmer_no:
+    hook.terminate_channel()
 
-            row = iterator.split('@')
-            timestamp = ''.join(
-                (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
+    for iterator in trimmer_no:
 
-            if timestamp < last_update:
-                last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
-                shoot.send(last_check_update_query)
-                shoot.send('commit$$$')
+        row = iterator.split('@')
+        timestamp = ''.join(
+            (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
 
-                break
+        if timestamp < last_update:
+            last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
+            shoot.send(last_check_update_query)
+            shoot.send('commit$$$')
 
-            row[0] = timestamp
-            if len(row) == 10:
-                query = f'order$$$insert into `{i}` values("{row[0]}",{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]},{row[8]},{row[9]});'
-                shoot.send(query)
-    except Exception as e:
-        print('url:',i,'raises error:',e)
+            break
+
+        row[0] = timestamp
+        if len(row) == 10:
+            query = f'order$$$insert into `{i}` values("{row[0]}",{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]},{row[8]},{row[9]});'
+            shoot.send(query)
+    #except Exception as e:
+       # print('url:',i,'raises error:',e)
 
     
 

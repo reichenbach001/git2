@@ -24,7 +24,7 @@ class Processor:
 
             got = self.db.execute2(list[1])
             got2=got[0].strftime('%Y-%m-%d')
-            got2 = ''.join(('response$$$', got2))
+            got2 = ''.join(('response$$$', got2,',',str(got[1])))
             
             shoot=Shoot(constant_vars['qeue_to_crawler'])
             shoot.send(got2)
