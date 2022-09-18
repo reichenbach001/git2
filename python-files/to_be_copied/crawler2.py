@@ -1,3 +1,4 @@
+from logging import exception
 import time
 import os
 import random
@@ -40,6 +41,7 @@ def fetch_data(urls):
     urls=urls[start_from:start_from+25]   
     # limiting done 
     #  
+
     for i in urls:  
         get_and_save(i,today_date,data_fetcher_obj,shoot) 
 
@@ -76,36 +78,39 @@ def hook_for_database_init():
 def get_and_save(i,today_date,data_fetcher_obj,shoot) :
 
     hook=Hook(constant_vars['qeue_to_crawler'])
-    make_table_i(i)
+    
+    try:
+        make_table_i(i)
 
-    data_fetched = data_fetcher_obj.fetch_data(i)
-    trimmer_no = data_fetched.split(';')
+        data_fetched = data_fetcher_obj.fetch_data(i)
+        trimmer_no = data_fetched.split(';')
 
-    last_update_query = f'request$$$SELECT last_update FROM last_check WHERE share_id={i};'
-    shoot.send(last_update_query)
+        last_update_query = f'request$$$SELECT last_update FROM last_check WHERE share_id={i};'
+        shoot.send(last_update_query)
 
-    hook.start()
-    last_update = hook.body
-    hook.terminate_channel()
+        hook.start()
+        last_update = hook.body
+        hook.terminate_channel()
 
-    for iterator in trimmer_no:
+        for iterator in trimmer_no:
 
-        row = iterator.split('@')
-        timestamp = ''.join(
-            (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
+            row = iterator.split('@')
+            timestamp = ''.join(
+                (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
 
-        if timestamp < last_update:
-            last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
-            shoot.send(last_check_update_query)
-            shoot.send('commit$$$')
+            if timestamp < last_update:
+                last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
+                shoot.send(last_check_update_query)
+                shoot.send('commit$$$')
 
-            break
+                break
 
-        row[0] = timestamp
-        if len(row) == 10:
-            query = f'order$$$insert into `{i}` values("{row[0]}",{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]},{row[8]},{row[9]});'
-            shoot.send(query)
-   
+            row[0] = timestamp
+            if len(row) == 10:
+                query = f'order$$$insert into `{i}` values("{row[0]}",{row[1]},{row[2]},{row[3]},{row[4]},{row[5]},{row[6]},{row[7]},{row[8]},{row[9]});'
+                shoot.send(query)
+    except Exception as e:
+        print('url:',i,'raises error:',e)
 
     
 
@@ -113,7 +118,16 @@ def get_and_save(i,today_date,data_fetcher_obj,shoot) :
 def runner():
     start_time = time.time()
 
-    fetched_shares = fetch_shares()
+    try:
+        fetched_shares = fetch_shares()
+    except Exception as e:
+        print(e)
+        print('sleeping for 5 secs')
+        time.sleep(5)
+        fetched_shares = fetch_shares()
+
+
+
     print('collecting URLs took:', time.time() - start_time)
 
     start_time = time.time()
