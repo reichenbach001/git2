@@ -29,6 +29,7 @@ services:
 
   rabbit_mq:
     image: rabbitmq:3.11.0-rc.1-management
+    container_name: 'rabbit-havij'
     restart: always
     ports:
       - '5672:5672'
