@@ -87,11 +87,10 @@ def get_and_save(i,today_date,data_fetcher_obj,shoot) :
     trimmer_no = data_fetched.split(';')
 
     last_update_query = f'request$$$SELECT last_update,share_id FROM last_check WHERE share_id={i};'
-    shoot.send(last_update_query)
+    (qu_temp_name,corr_id)=shoot.send(last_update_query,1)
 
-    hook.start()
+    hook.start(qu_temp_name,corr_id,1)
     last_update_tmp= hook.body
-
     last_update=last_update_tmp.split(',')[0]
     print(i,' : ',last_update_tmp.split(',')[1])
 

@@ -15,12 +15,13 @@ class Hook:
         self.channel = self.connection.channel()
 
     
-    def start(self):
+    def start(self,qu_temp_name='',corr_id='',type=0):
         process = Processor()
+
         self.channel.queue_declare(queue=self.qu)
 
 
-        def callback(ch, method, properties, body):
+        def callback0(ch, method, properties, body):
             body=body.decode('utf-8')
             
             self.body = process.extract(body)
@@ -29,9 +30,23 @@ class Hook:
                 self.channel.stop_consuming()
                 print(f'on {self.qu} recieved: ',self.body)
 
+        def callback1(ch, method, properties,props, body):
+            body=body.decode('utf-8')
+            if corr_id==props.correlation_id:
+                self.body = process.extract(body)
+            
+            #if self.qu==constant_vars['qeue_to_crawler']:
+            #    self.channel.stop_consuming()
+            #    print(f'on {self.qu} recieved: ',self.body)
 
-        self.channel.basic_consume(
-            queue=self.qu, on_message_callback=callback, auto_ack=True)
+        if type==1:
+            self.channel.basic_consume(
+                queue=qu_temp_name, on_message_callback=callback1, auto_ack=True)
+        
+        else:
+            self.channel.basic_consume(
+                queue=self.qu, on_message_callback=callback0, auto_ack=True)
+
 
 
         
