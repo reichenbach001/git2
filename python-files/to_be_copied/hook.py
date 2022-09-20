@@ -14,6 +14,7 @@ class Hook:
             pika.ConnectionParameters(host=self.host, port=self.port))
         self.channel = self.connection.channel()
 
+
     
     def start(self):
         process = Processor()
@@ -27,7 +28,6 @@ class Hook:
             
             if self.qu==constant_vars['qeue_to_crawler']:
                 self.channel.stop_consuming()
-                print(f'on {self.qu} recieved: ',self.body)
 
 
         self.channel.basic_consume(

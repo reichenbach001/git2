@@ -9,11 +9,14 @@ class Shoot:
         self.port = port_number
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
         self.channel = self.connection.channel()
+
         self.channel.queue_declare(queue=self.qu)
 
     def send(self, mssg):
-        
+
         self.channel.basic_publish(exchange='', routing_key=self.qu, body=mssg)
+
+
             
     def terminate(self):
         self.connection.close()
