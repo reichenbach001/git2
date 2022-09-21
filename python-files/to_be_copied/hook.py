@@ -18,7 +18,7 @@ class Hook:
     
     def start(self):
         process = Processor()
-        self.channel.queue_declare(queue=self.qu)
+        self.channel.queue_declare(queue=self.qu,durable=True)
 
 
         def callback(ch, method, properties, body):

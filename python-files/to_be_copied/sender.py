@@ -10,7 +10,7 @@ class Shoot:
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=self.host, port=self.port))
         self.channel = self.connection.channel()
 
-        self.channel.queue_declare(queue=self.qu)
+        self.channel.queue_declare(queue=self.qu,durable=True)
 
     def send(self, mssg):
 

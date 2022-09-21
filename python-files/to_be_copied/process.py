@@ -18,7 +18,7 @@ class Processor:
 
             self.db.execute1(list[1])
             
-            return 1
+
 
         if list[0] == 'request':
 
