@@ -25,9 +25,6 @@ class Hook:
             body=body.decode('utf-8')
             
             self.body = process.extract(body)
-            with open('log.txt','r+') as file:
-                #txt=''.join((body,'\n'))
-                file.write(body)
 
             if self.qu==constant_vars['qeue_to_crawler']:
                 self.channel.stop_consuming()
