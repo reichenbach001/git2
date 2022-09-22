@@ -67,7 +67,6 @@ def table_last_check_init(urls):
 
     for iterator in urls:
 
-        make_table_i(iterator,shoot2)
         temp2 = temp2 + 1
         column_for_table = f'order$$$INSERT IGNORE INTO last_check(share_id) values({iterator});'
         shoot2.send(column_for_table)
@@ -77,12 +76,15 @@ def table_last_check_init(urls):
     print('initiating done ', temp2)
 
 
-def make_table_i(i,shoot):
-    #shoot2 = Shoot(constant_vars['qeue_to_db'])
-    table_making_query = f'order$$$CREATE TABLE IF NOT EXISTS `{i}`(date DATE NOT NULL,max_price int unsigned,min_price int unsigned, total int unsigned,last_price int unsigned,first_price int unsigned, yesterday_price int unsigned, val bigint, volume bigint unsigned,number int unsigned);'
-
-    shoot.send(table_making_query)
-    #shoot2.terminate()
+def make_tables(urls):
+    shoot = Shoot(constant_vars['qeue_to_db'])
+    
+    for i in urls:
+        table_making_query = f'order$$$CREATE TABLE IF NOT EXISTS `{i}`(date DATE NOT NULL,max_price int unsigned,min_price int unsigned, total int unsigned,last_price int unsigned,first_price int unsigned, yesterday_price int unsigned, val bigint, volume bigint unsigned,number int unsigned);'
+        shoot.send(table_making_query)
+    
+    shoot.send('commit$$$')
+    shoot.terminate()
 
 def hook_for_database_init():
 
@@ -97,7 +99,8 @@ def get_last_update(urls,shoot):
         shoot.send(last_update_query)
         hook.start()
         last_update[iterator] = hook.body
-        hook.terminate_channel()
+        #hook.terminate_channel()
+        hook.__exit__()
     print(last_update)
 
     return(last_update)
@@ -119,9 +122,10 @@ def get_and_save(i,today_date,last_update,data_fetcher_obj) :
         data_fetched=[]
 
     trimmer_no = data_fetched.split(';')
+    trimmer_no=trimmer_no[:len(trimmer_no)-1]
 
     for iterator in trimmer_no:
-
+        
         row = iterator.split('@')
         timestamp = ''.join(
             (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
@@ -160,10 +164,8 @@ def runner():
 
     start_time = time.time()
 
-
-
-
     table_last_check_init(fetched_shares)
+    make_tables(fetched_shares)
 
     fetch_data(fetched_shares)
     print('crawling data took:', time.time() - start_time)
