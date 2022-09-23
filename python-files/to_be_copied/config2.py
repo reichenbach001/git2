@@ -9,7 +9,9 @@ constant_vars = {'tset_share_URLs_file': 'URLs.txt',
                   'port':5672,
                   'host_rabbit':'rabbit_mq',
                   'qeue_to_db':'qu1',
-                  'qeue_to_crawler':'qu2'
+                  'qeue_to_crawler':'qu2',
+                  'processes_number':6,
+                  'threads_number':10
 
                  }
 
