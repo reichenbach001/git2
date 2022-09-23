@@ -13,7 +13,7 @@ import concurrent.futures
 from time_measure import Measure
 
 def fetch_shares():
-    '''
+    
     url = constant_vars['main_url']
     length_to_select = constant_vars['selecting_length']
     url_fetcher_obj = tset_module.TsetCrawler()
@@ -27,10 +27,11 @@ def fetch_shares():
       '11372565594192822', '58441662689656407', '58602432837130018',
        '23891830829322971', '28809886765682162', '37113329142641973',
         '23061497667178737', '20453828618330936', '47484909397760341',
-         '52402259970992754', '68639224778935656', '56488870487464149',
+         '52402259970992754', '6863922477893707705656', '56488870487464149',
           '42190112624335550', '32357363984168442', '50689220001642146',
            '778253364357513', '61506294208022391', '16056283141617755',
             '53076981031757046']
+    '''
 
 
     return urls
@@ -121,8 +122,21 @@ def get_and_save(i,today_date,last_update,data_fetcher_obj) :
         trimmer_no = data_fetched.split(';')
         trimmer_no=trimmer_no[:len(trimmer_no)-1]
     except Exception as e:
-        print(e,' for ',i)
-        trimmer_no=[]
+        
+        try:
+            for three_times_try in range(3):
+                print('[!]for: ',i,"\n ....waiting 3s attempt{three_times_try}")
+                time.sleep(3)
+                data_fetched = data_fetcher_obj.fetch_data(i)
+                if data_fetched:
+
+                    trimmer_no = data_fetched.split(';')
+                    trimmer_no=trimmer_no[:len(trimmer_no)-1]
+                    break
+
+        except Exception as ee:        
+            trimmer_no=[]
+            print('[!]error: ',ee,'for',i)
 
 
 
@@ -187,7 +201,6 @@ def runner():
     fetched_shares = fetch_shares()
     print('...collecting URLs took:', measure.stop())
 
-    
     make_tables(fetched_shares) 
     table_last_check_init(fetched_shares)
     last_update_for_urls=get_last_update(fetched_shares)
@@ -202,5 +215,6 @@ def runner():
         os._exit(0)
 
 if __name__ == '__main__':
+    time.sleep(2)
     runner()
 
