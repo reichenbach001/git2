@@ -1,6 +1,5 @@
 import time
 import os
-import random
 
 from hook import Hook
 from sender import Shoot
@@ -11,6 +10,7 @@ from config2 import constant_vars
 
 from threading import Thread
 import concurrent.futures
+from time_measure import Measure
 
 def fetch_shares():
     '''
@@ -43,7 +43,7 @@ def fetch_data(urls,last_update_dict):
     today_date = datetime.today().strftime('%Y-%m-%d')
 
     
-    print('============================================================')
+
     with concurrent.futures.ThreadPoolExecutor(max_workers = 10) as executor:
         futuree={executor.submit(get_and_save,i,today_date,last_update_dict,data_fetcher_obj): i for i in urls}
         for future in concurrent.futures.as_completed(futuree):
@@ -71,7 +71,7 @@ def table_last_check_init(urls):
 
     shoot2.send('commit$$$')
     shoot2.terminate()
-    print('initiating done ', temp2)
+    #print('initiating done ', temp2)
 
 
 def make_tables(urls):
@@ -114,8 +114,8 @@ def get_last_update(urls):
 def get_and_save(i,today_date,last_update,data_fetcher_obj) :
 
     shoot = Shoot(constant_vars['qeue_to_db'])
-
     last_update_i=last_update[i]
+    
     try:
         data_fetched = data_fetcher_obj.fetch_data(i)
         trimmer_no = data_fetched.split(';')
@@ -133,13 +133,7 @@ def get_and_save(i,today_date,last_update,data_fetcher_obj) :
         timestamp = ''.join(
             (row[0][0:4], '-', row[0][4:6], '-', row[0][6:8]))
 
-        if timestamp < last_update_i:
-
-            last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
-            shoot.send(last_check_update_query)
-  
-            shoot.send('commit$$$')
-
+        if check_duplicate_write(timestamp,last_update_i,today_date,i):
             break
 
         row[0] = timestamp
@@ -154,32 +148,58 @@ def get_and_save(i,today_date,last_update,data_fetcher_obj) :
     shoot.send('commit$$$')
     shoot.terminate()
 
-    log=''.join(('--done: ',str(i)))
+    log=''.join(('[*]done: ',str(i)))
 
 
     return log
 
     
 
+def check_duplicate_write(timestamp,last_update_i,today_date,i):
+    if timestamp < last_update_i:
+        shoot = Shoot(constant_vars['qeue_to_db'])
+
+        last_check_update_query = f'order$$$UPDATE last_check SET last_update="{today_date}" where share_id={i}; '
+        shoot.send(last_check_update_query)
+
+        shoot.send('commit$$$')
+        shoot.terminate()
+        return True
+    return False
+
+def qeue_empty_check():
+    status=Hook(constant_vars['qeue_to_db'])
+    
+    while True:
+        state=status.channel.queue_declare(constant_vars['qeue_to_db'],passive=True)
+        if state.method.message_count==0:
+            return True
+        time.sleep(5)
+
 
 def runner():
-    start_time = time.time()
+    measure=Measure()
+
     th=Thread(target=hook_for_database_init)
     th.start()
+    
+    measure.start()
     fetched_shares = fetch_shares()
-    print('collecting URLs took:', time.time() - start_time)
+    print('...collecting URLs took:', measure.stop())
 
     
-    start_time = time.time()
-    make_tables(fetched_shares)
+    make_tables(fetched_shares) 
     table_last_check_init(fetched_shares)
     last_update_for_urls=get_last_update(fetched_shares)
+    print('...initiating tables and getting last update took:',measure.stop())
+    
     fetch_data(fetched_shares,last_update_for_urls)
 
+    print('...crawling data took:',measure.stop())
 
-    print('crawling data took:', time.time() - start_time)
-
-
+    if qeue_empty_check():
+        print('...emptying RabbitMQ took:',measure.stop())
+        os._exit(0)
 
 if __name__ == '__main__':
     runner()
